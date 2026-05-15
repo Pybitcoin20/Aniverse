@@ -19,12 +19,25 @@ export interface AnimeCharacter {
   role: 'Protagonist' | 'Antagonist' | 'Supporting';
 }
 
+export interface Episode {
+  number: number;
+  title: string;
+  duration: string;
+  thumbnail: string;
+}
+
 export interface AnimeTitle {
   id: string;
   title: string;
   rating: number;
   popularity: number;
   imageUrl: string;
+  bannerUrl?: string;
+  synopsis: string;
+  genres: string[];
+  year: number;
+  status: 'Ongoing' | 'Completed';
+  episodes?: Episode[];
 }
 
 export interface UserStats {
@@ -34,6 +47,7 @@ export interface UserStats {
   badges: string[];
   streak: number;
   lastPlayed: string;
+  watchlist: string[]; // anime IDs
 }
 
 export interface LeaderboardEntry {

@@ -1,21 +1,29 @@
 @import "tailwindcss";
 
 @theme {
-  --color-akatsuki-bg: #0f0f12;
-  --color-akatsuki-card: rgba(20, 20, 25, 0.8);
+  --color-akatsuki-bg: #0b0b0d;
+  --color-akatsuki-card: rgba(15, 15, 20, 0.7);
   --color-akatsuki-red: #ff0033;
-  --color-akatsuki-purple: #9d00ff;
+  --color-akatsuki-purple: #8b2cf5;
   --color-akatsuki-cyan: #00f2ff;
   --color-akatsuki-red-glow: rgba(255, 0, 51, 0.5);
   
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --animate-slow-zoom: slow-zoom 20s infinite alternate;
+}
+
+@keyframes slow-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
 }
 
 @layer base {
   body {
     @apply bg-akatsuki-bg text-gray-100 font-sans antialiased selection:bg-akatsuki-red/30;
     margin: 0;
+    overflow-x: hidden;
   }
 }
 

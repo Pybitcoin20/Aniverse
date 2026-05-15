@@ -1,24 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/layout/Layout';
-import { Dashboard } from './components/dashboard/Dashboard';
+import { HomeView } from './components/streaming/HomeView';
+import { AnimeDetails } from './components/streaming/AnimeDetails';
+import { EpisodePlayer } from './components/streaming/EpisodePlayer';
 import { QuizSystem } from './components/quiz/QuizSystem';
 import { WordleGame } from './components/games/WordleGame';
 import { HigherLowerGame } from './components/games/HigherLowerGame';
-import { UserStats } from './types/anime';
+import { UserStats, AnimeTitle } from './types/anime';
 import { motion, AnimatePresence } from 'motion/react';
 import { Trophy, ShieldAlert, Sparkles, Gamepad2 } from 'lucide-react';
 
 const INITIAL_STATS: UserStats = {
   level: 1,
-  xp: 150,
-  title: 'Genin',
+  xp: 1500,
+  title: 'Chūnin',
   badges: [],
-  streak: 0,
+  streak: 5,
   lastPlayed: new Date().toISOString(),
+  watchlist: [],
 };
 
 export default function App() {
-  const [activeView, setActiveView] = useState<'dashboard' | 'quizzes' | 'games' | 'rankings' | 'profile'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'quizzes' | 'games' | 'rankings' | 'profile' | 'details' | 'player'>('dashboard');
+  const [selectedAnime, setSelectedAnime] = useState<AnimeTitle | null>(null);
+  const [activeEpisode, setActiveEpisode] = useState<number>(1);
   const [userStats, setUserStats] = useState<UserStats>(INITIAL_STATS);
   const [activeGame, setActiveGame] = useState<'none' | 'wordle' | 'higher-lower'>('none');
 
@@ -37,33 +42,53 @@ export default function App() {
   const handleQuizComplete = (earnedXP: number) => {
     const newXP = userStats.xp + earnedXP;
     const newLevel = Math.floor(newXP / 1000) + 1;
-    
-    let newTitle = userStats.title;
-    if (newLevel >= 50) newTitle = 'Otaku God';
-    else if (newLevel >= 40) newTitle = 'Hokage';
-    else if (newLevel >= 25) newTitle = 'Jōnin';
-    else if (newLevel >= 10) newTitle = 'Chūnin';
+    saveStats({ ...userStats, xp: newXP, level: newLevel });
+    setActiveView('dashboard');
+  };
 
-    saveStats({
-      ...userStats,
-      xp: newXP,
-      level: newLevel,
-      title: newTitle,
-    });
+  const handleSelectAnime = (anime: AnimeTitle) => {
+    setSelectedAnime(anime);
+    setActiveView('details');
+  };
+
+  const handlePlayAnime = (anime: AnimeTitle, ep: number = 1) => {
+    setSelectedAnime(anime);
+    setActiveEpisode(ep);
+    setActiveView('player');
   };
 
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <Dashboard userStats={userStats} setActiveView={setActiveView} />;
+        return <HomeView onSelect={handleSelectAnime} onPlay={handlePlayAnime} />;
+      
+      case 'details':
+        return selectedAnime ? (
+          <AnimeDetails 
+            anime={selectedAnime} 
+            onBack={() => setActiveView('dashboard')} 
+            onPlay={handlePlayAnime} 
+          />
+        ) : null;
+
+      case 'player':
+        return selectedAnime ? (
+          <EpisodePlayer 
+            anime={selectedAnime} 
+            episodeNumber={activeEpisode} 
+            onBack={() => setActiveView('details')} 
+          />
+        ) : null;
+
       case 'quizzes':
         return <QuizSystem onComplete={handleQuizComplete} />;
+      
       case 'games':
-        if (activeGame === 'wordle') return <div className="space-y-4"><button onClick={() => setActiveGame('none')} className="btn-outline py-2">&larr; Back</button><WordleGame /></div>;
-        if (activeGame === 'higher-lower') return <div className="space-y-4"><button onClick={() => setActiveGame('none')} className="btn-outline py-2">&larr; Back</button><HigherLowerGame /></div>;
+        if (activeGame === 'wordle') return <div className="p-8"><button onClick={() => setActiveGame('none')} className="btn-outline mb-8">&larr; Back</button><WordleGame /></div>;
+        if (activeGame === 'higher-lower') return <div className="p-8"><button onClick={() => setActiveGame('none')} className="btn-outline mb-8">&larr; Back</button><HigherLowerGame /></div>;
         
         return (
-          <div className="space-y-8">
+          <div className="p-8 space-y-8">
             <h1 className="text-4xl font-black text-white tracking-tighter">ELITE <span className="neon-text-cyan">MINI-GAMES</span></h1>
             <div className="grid md:grid-cols-2 gap-6">
               <div onClick={() => setActiveGame('wordle')} className="glass p-8 rounded-3xl border border-white/5 hover:neon-border-red transition-all cursor-pointer group">
@@ -89,9 +114,10 @@ export default function App() {
             </div>
           </div>
         );
+
       case 'rankings':
         return (
-          <div className="space-y-8">
+          <div className="p-8 space-y-8">
             <h1 className="text-4xl font-black text-white tracking-tighter">GLOBAL <span className="neon-text-red">RANKINGS</span></h1>
             <div className="glass rounded-3xl overflow-hidden border border-white/5">
               <div className="p-8 bg-akatsuki-red/10 border-b border-akatsuki-red/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -109,10 +135,10 @@ export default function App() {
               </div>
               
               <div className="p-4 md:p-8 space-y-4">
-                {[2, 3, 4, 5, 6, 7, 8].map((pos) => (
+                {[2, 3, 4, 5, 6].map((pos) => (
                   <div key={pos} className="flex items-center gap-6 p-4 hover:bg-white/5 transition-all rounded-2xl border border-transparent hover:border-white/10 group">
                     <span className="w-8 text-center font-black text-2xl text-gray-500 group-hover:text-white transition-colors">{pos}</span>
-                    <div className="w-12 h-12 rounded-xl bg-white/5 overflow-hidden">
+                    <div className="w-12 h-12 rounded-xl bg-white/5 overflow-hidden border border-white/5">
                       <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=user${pos}`} alt="user" />
                     </div>
                     <div className="flex-1">
@@ -128,9 +154,10 @@ export default function App() {
             </div>
           </div>
         );
+
       case 'profile':
         return (
-          <div className="space-y-8">
+          <div className="p-8 space-y-8">
              <h1 className="text-4xl font-black text-white tracking-tighter">PLAYER <span className="neon-text-cyan">PROFILE</span></h1>
              <div className="grid md:grid-cols-3 gap-8">
                <div className="glass p-8 rounded-3xl border border-white/5 text-center flex flex-col items-center">
@@ -169,30 +196,13 @@ export default function App() {
                       </div>
                     ))}
                  </div>
-                 
-                 <h3 className="text-xl font-black text-white flex items-center gap-2 uppercase tracking-tighter pt-4">
-                   <Sparkles className="w-5 h-5 text-akatsuki-cyan" />
-                   Recent Achievements
-                 </h3>
-                 <div className="space-y-3">
-                   {[1, 2].map(i => (
-                     <div key={i} className="glass p-4 rounded-2xl border border-white/5 flex items-center gap-4">
-                       <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center text-green-500">
-                         <Trophy className="w-5 h-5" />
-                       </div>
-                       <div>
-                         <p className="text-sm font-bold text-white">First Perfect Quiz</p>
-                         <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Completed 2 days ago</p>
-                       </div>
-                     </div>
-                   ))}
-                 </div>
                </div>
              </div>
           </div>
         );
+
       default:
-        return <Dashboard userStats={userStats} setActiveView={setActiveView} />;
+        return <HomeView onSelect={handleSelectAnime} onPlay={handlePlayAnime} />;
     }
   };
 
@@ -200,7 +210,7 @@ export default function App() {
     <Layout activeView={activeView} setActiveView={setActiveView} userStats={userStats}>
       <AnimatePresence mode="wait">
         <motion.div
-          key={activeView + activeGame}
+          key={activeView + (selectedAnime?.id || 'none')}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -20 }}
@@ -212,4 +222,3 @@ export default function App() {
     </Layout>
   );
 }
-
